@@ -48,6 +48,29 @@ describe Object do
     expect(class_exists? :Array).to eq true
     expect(class_exists? :aRRay).to eq false
     expect(class_exists? :ARRAY).to eq false
+
+    # From stdlib
+    require 'date'
+    expect(class_exists? :Date).to eq true
+
+    # Modules
+    expect(class_exists? :Math).to eq true
+    expect(class_exists? :Kernel).to_eq true
+    require 'fileutils'
+    expect(class_exists? :FileUtils).to_eq true
+    expect(class_exists? 'FileUtils::DryRun'.intern).to_eq true
+    expect(class_exists? 'FileUtils::DryRun').to_eq true
+    require 'objspace'
+    expect(class_exists? 'ObjectSpace::InternalObjectWrapper').to_eq true
+    expect(class_exists? 'ObjectSpace::InternalObjectWrapper'.intern).to_eq true
+
+    # Check if newly defined classes/modules exists
+    expect(class_exists? :A).to eq true
+    expect(class_exists? 'A').to eq true
+    expect(class_exists? 'F::G'.intern).to eq true
+    expect(class_exists? 'D::H'.intern).to eq true
+    expect(class_exists? 'F::G').to eq true
+    expect(class_exists? 'D::H').to eq true
   end
 
   it "#not_nil?" do
@@ -81,6 +104,37 @@ describe Object do
 
 end
 
+describe "Included Module methods" do
+
+  it "check if nil_chain works in included methods" do
+    e = E.new
+    params = { :foo => 'bar' }
+    expect(e.test_nil_chain{ params[:bogus_key] }).to eq nil
+    expect(e.test_nil_chain{ params[:foo] }).to eq 'bar'
+    expect(e.test_nil_chain(true) { bogus_variable } ).to equal true
+  end
+
+  it "check if bool_chain works in included methods" do
+    e = E.new
+    expect(e.test_bool_chain{bogus_variable}).to equal false
+    var = true
+    expect(e.test_bool_chain{var}).to equal true
+    var = 'foo'
+    expect(e.test_bool_chain{var}).to eq 'foo'
+    result = e.test_bool_chain{ var.transmogrify }
+    expect(result).to equal false
+  end
+
+  it "check if class_exists? works in included methods" do
+    e = E.new
+    expect(e.test_class_exists? :Symbol).to eq true
+    expect(e.test_class_exists? :Symbology).to eq false
+    expect(e.test_class_exists? 'Symbol').to eq true
+    expect(e.test_class_exists? 'Symbology').to eq false
+  end
+
+end
+
 # some small test fixtures
 
 class A
@@ -100,6 +154,35 @@ end
 class C
   def hello
     "Hello, world!"
+  end
+end
+
+module D
+  def test_nil_chain ret_val = nil, &block
+    nil_chain ret_val, &block
+  end
+
+  def test_bool_chain &block
+    bool_chain &block
+  end
+
+  def test_class_exists? symbol
+    class_exists? symbol
+  end
+end
+
+class E
+  include D
+end
+
+module F
+end
+
+class F::G
+end
+
+module D
+  class H
   end
 end
 
