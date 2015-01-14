@@ -133,6 +133,27 @@ describe "Included Module methods" do
     expect(e.test_class_exists? 'Symbology').to eq false
   end
 
+  it "check if not_nil? works in included methods" do
+    e = E.new
+    var = nil
+    expect(e.test_not_nil var).to eq false
+    var = 'foobar'
+    expect(e.test_not_nil var).to eq true
+  end
+
+  it "check if same_as works in included methods" do
+    expect(E.new.test_same_as).to eq true
+  end
+
+  it "#cascade" do
+    e = E.new
+    expect(e.test_test_cascade).to be_nil
+    expect(e.test_test_cascade('step1')).to eq 1
+    expect(e.test_test_cascade('step2')).to eq 2
+    expect(e.test_test_cascade('step3')).to eq 3
+    expect(e.test_test_cascade('foobar')).to eq 4
+  end
+
 end
 
 # some small test fixtures
@@ -168,6 +189,18 @@ module D
 
   def test_class_exists? symbol
     class_exists? symbol
+  end
+
+  def test_test_cascade trigger = nil
+    test_cascade trigger
+  end
+
+  def test_not_nil var
+    var.not_nil?
+  end
+
+  def test_same_as
+    :a.same_as 'a'
   end
 end
 
